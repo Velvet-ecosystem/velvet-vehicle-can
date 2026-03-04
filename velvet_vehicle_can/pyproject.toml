@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "velvet-vehicle-can"
+version = "0.1.0"
+description = "Velvet CAN vehicle subsystem - read-only CAN learning, fingerprinting, and safety qualification"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Velvet AI", email = "noreply@velvet.ai" }
+]
+requires-python = ">=3.8"
+
+# Core dependencies (minimal)
+dependencies = []
+
+# Optional dependency for hardware CAN access
+[project.optional-dependencies]
+hardware = ["python-can>=4.0.0"]
+
+[tool.setuptools]
+packages = ["velvet_vehicle_can"]
+include-package-data = true
+
+[project.urls]
+Homepage = "https://velvet.ai"
+Documentation = "https://docs.velvet.ai/modules/vehicle-can"
+Repository = "https://github.com/velvet-ai/velvet-vehicle-can"
