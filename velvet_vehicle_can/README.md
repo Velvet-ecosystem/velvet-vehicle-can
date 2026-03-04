@@ -92,7 +92,7 @@ See `docs/can_learning_pipeline.md` for safety methodology.
 
 ## License
 
-AGPLv3 - See LICENSE file
+GPLv3 - See LICENSE file
 
 ## Dependencies
 
