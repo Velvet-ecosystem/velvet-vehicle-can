@@ -4,7 +4,13 @@
 
 ## Overview
 
-This module provides offline-first, vehicle-agnostic CAN bus learning capabilities for Velvet AI. It operates in read-only mode by default and learns vehicle control dialects through passive observation and correlation analysis.
+This module provides offline-first, vehicle-agnostic CAN bus learning capabilities for Velvet AI. It operates in read-only mode by default and learn vehicle control dialects through passive observation and correlation analysis.
+
+## What Velvet Vehicle CAN is
+
+this repository contains the CAN bus interface layer used by Velvet AI to communicate with vehicle ECUs, perform diagnostics,
+And observe vehicle telemetry.
+
 
 ## Features
 
