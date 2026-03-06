@@ -1,0 +1,21 @@
+name: Velour Commit Feed
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send commit notice to Discord
+        run: |
+          curl -H "Content-Type: application/json" \
+          -X POST \
+          -d "{
+            \"username\": \"Velour — The Librarian\",
+            \"avatar_url\": \"https://raw.githubusercontent.com/Velvet-ecosystem/.github/main/velvet_icon.png\",
+            \"content\": \"📜 **Velvet Archive Update**\nRepository: ${{ github.repository }}\nAuthor: ${{ github.actor }}\nCommit: ${{ github.event.head_commit.message }}\nBranch: ${{ github.ref_name }}\"
+          }" \
+          https://discord.com/api/webhooks/1478666279350173738/DbsDGBwcUQqiGp6nXrL3G9l90C-MM4KabDb0-e4181XqLcArrOR2OVVUBuwQdwMIvVM6
