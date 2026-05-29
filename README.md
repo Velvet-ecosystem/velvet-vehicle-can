@@ -6,6 +6,16 @@
 
 This module provides offline-first, vehicle-agnostic CAN bus learning capabilities for Velvet AI. It operates in read-only mode by default and learn vehicle control dialects through passive observation and correlation analysis.
 
+## CAN Body Registry Contract
+
+Velvet Vehicle CAN supports vehicle body discovery, signal classification, fingerprinting, and read-only telemetry, but detected CAN activity is not authority.
+
+CAN-discovered signals begin as candidates. Write-capable behavior requires explicit registration, authorization, safety gating, and receipts.
+
+See:
+
+- [CAN Body Registry Contract](docs/can_body_registry_contract.md)
+
 ## What Velvet Vehicle CAN is
 
 this repository contains the CAN bus interface layer used by Velvet AI to communicate with vehicle ECUs, perform diagnostics,
