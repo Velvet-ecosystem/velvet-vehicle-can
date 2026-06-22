@@ -16,6 +16,12 @@ from .can_sniffer_service import CanSnifferService, SnifferConfig, VehicleRuntim
 from .can_backend import CanReader, SocketCanConfig, PythonCanReader, FakeCanReader
 from .can_observer import ObservedCanFrame, ReceiveOnlyCanObserver, normalize_observed_frame
 from .listen_only_backend import ListenOnlyCanConfig, ListenOnlyPythonCanReader
+from .signal_decoder import (
+    DecodedSignal,
+    decode_signal,
+    decode_signal_map,
+    summarize_decoded_signals,
+)
 
 __all__ = [
     "CanFingerprint",
@@ -49,4 +55,8 @@ __all__ = [
     "normalize_observed_frame",
     "ListenOnlyCanConfig",
     "ListenOnlyPythonCanReader",
+    "DecodedSignal",
+    "decode_signal",
+    "decode_signal_map",
+    "summarize_decoded_signals",
 ]
