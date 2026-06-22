@@ -4,7 +4,7 @@
 
 ## Overview
 
-This module provides offline-first, vehicle-agnostic CAN bus learning capabilities for Velvet AI. It operates in read-only mode by default and learn vehicle control dialects through passive observation and correlation analysis.
+This module provides offline-first, vehicle-agnostic CAN bus learning capabilities for Velvet AI. It operates in read-only mode by default and learns vehicle control dialects through passive observation and correlation analysis.
 
 ## CAN Body Registry Contract
 
@@ -18,9 +18,7 @@ See:
 
 ## What Velvet Vehicle CAN is
 
-this repository contains the CAN bus interface layer used by Velvet AI to communicate with vehicle ECUs, perform diagnostics,
-And observe vehicle telemetry.
-
+This repository contains the CAN bus interface layer used by Velvet AI to communicate with vehicle ECUs, perform diagnostics, and observe vehicle telemetry.
 
 ## Features
 
@@ -43,24 +41,53 @@ And observe vehicle telemetry.
 ## Installation
 
 ### Basic (software-only, testing)
+
 ```bash
 pip install velvet-vehicle-can
 ```
 
 ### With hardware CAN support
+
 ```bash
 pip install velvet-vehicle-can[hardware]
 ```
 
-Requires SocketCAN configured on Linux:
+Hardware observation requires SocketCAN configured in kernel listen-only mode.
+
+Do not guess the vehicle bitrate. Measure or confirm the bitrate for the specific bus before connecting the interface.
+
 ```bash
-sudo ip link set can0 type can bitrate 500000
-sudo ip link set up can0
+CAN_INTERFACE=can0
+CAN_BITRATE=<verified_vehicle_bitrate>
+
+sudo ip link set "$CAN_INTERFACE" down 2>/dev/null || true
+sudo ip link set "$CAN_INTERFACE" type can \
+  bitrate "$CAN_BITRATE" \
+  listen-only on \
+  restart-ms 0
+sudo ip link set "$CAN_INTERFACE" up
 ```
+
+Verify the effective kernel configuration before starting any reader:
+
+```bash
+ip -details -statistics link show "$CAN_INTERFACE"
+```
+
+The output must explicitly report:
+
+```text
+state UP
+listen-only on
+bitrate <verified_vehicle_bitrate>
+```
+
+A missing `listen-only on` line is a failed deployment. Leave the interface down and do not start the observer.
 
 ## Usage
 
 ### Standalone (no hardware)
+
 ```python
 from velvet_vehicle_can import FakeCanReader, CanSnifferService
 
@@ -72,32 +99,50 @@ service.tick()  # Process one frame
 ```
 
 ### With hardware
+
+Use the receive-only hardware interfaces after the kernel listen-only check has passed:
+
 ```python
-from velvet_vehicle_can import PythonCanReader, SocketCanConfig, CanSnifferService
+from velvet_vehicle_can import (
+    ListenOnlyCanConfig,
+    ListenOnlyPythonCanReader,
+    ReceiveOnlyCanObserver,
+)
 
-config = SocketCanConfig(channel="can0", bustype="socketcan")
-reader = PythonCanReader(config)
+reader = ListenOnlyPythonCanReader(ListenOnlyCanConfig(channel="can0"))
+observer = ReceiveOnlyCanObserver(reader.read_frame)
 
-service = CanSnifferService(read_frame=reader.read_frame)
-
-while True:
-    service.tick()
+try:
+    while True:
+        frame = observer.observe()
+        if frame is not None:
+            print(frame.to_dict())
+finally:
+    reader.shutdown()
 ```
+
+The library does not configure bitrate, link state, or listen-only mode. Those remain deployment responsibilities enforced before the reader starts.
 
 ## Safety
 
 **This module does NOT perform CAN injection.**
 
 It only:
+
 - Reads CAN frames
 - Learns signal mappings
 - Provides qualification decisions
 
+Kernel listen-only mode is required for live vehicle observation. Application-level receive-only classes are an additional boundary, not a replacement for the kernel setting.
+
 Actual vehicle control must be implemented separately and must:
+
 - Respect `QualificationResult` envelopes
 - Implement kill switches
 - Handle driver overrides immediately
 - Validate checksums/counters before injection
+- Use separate executors, policies, gates, and receipts
+- Require explicit local deployment review
 
 See `docs/can_learning_pipeline.md` for safety methodology.
 
@@ -105,6 +150,8 @@ See `docs/can_learning_pipeline.md` for safety methodology.
 
 - [CAN Learning Pipeline](docs/can_learning_pipeline.md) - Stage-based onboarding
 - [Vehicle Dialects](docs/vehicle_dialects.md) - Philosophy and design
+
+The full Founder-node SocketCAN deployment procedure lives in the `velvet-runtime` repository under `docs/founder_can_listen_only_deployment.md`.
 
 ## License
 
