@@ -25,6 +25,7 @@ packages = ["velvet_vehicle_can"]
 include-package-data = true
 
 [project.urls]
-Homepage = "https://velvet.ai"
-Documentation = "https://docs.velvet.ai/modules/vehicle-can"
-Repository = "https://github.com/velvet-ai/velvet-vehicle-can"
+Homepage = "https://github.com/Velvet-ecosystem"
+Documentation = "https://github.com/Velvet-ecosystem/velvet-vehicle-can/tree/main/docs"
+Repository = "https://github.com/Velvet-ecosystem/velvet-vehicle-can"
+Issues = "https://github.com/Velvet-ecosystem/velvet-vehicle-can/issues"
