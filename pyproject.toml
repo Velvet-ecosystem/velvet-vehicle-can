@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "velvet-vehicle-can"
+version = "0.1.0"
+description = "Read-only vehicle CAN observation for Velvet"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "GPL-3.0-only" }
+dependencies = []
+
+[tool.setuptools.packages.find]
+include = ["velvet_vehicle_can*"]
