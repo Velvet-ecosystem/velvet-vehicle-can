@@ -11,16 +11,15 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Send commit notice to Discord
+      - name: Send commit receipt to Discord
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           REPOSITORY: ${{ github.repository }}
           AUTHOR: ${{ github.actor }}
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
           BRANCH: ${{ github.ref_name }}
-          COMMIT_URL: ${{ github.event.head_commit.url }}
         run: |
           test -n "$DISCORD_WEBHOOK_URL"
-          content=$(printf '📜 **Velvet Archive Update**\nRepository: %s\nAuthor: %s\nCommit: %s\nBranch: %s\n%s' "$REPOSITORY" "$AUTHOR" "$COMMIT_MESSAGE" "$BRANCH" "$COMMIT_URL")
+          content=$(printf '📜 **Velvet Archive Update**\nRepository: %s\nAuthor: %s\nCommit: %s\nBranch: %s' "$REPOSITORY" "$AUTHOR" "$COMMIT_MESSAGE" "$BRANCH")
           payload=$(jq -n --arg username "Velour — The Librarian" --arg avatar_url "https://raw.githubusercontent.com/Velvet-ecosystem/.github/main/velvet_icon.png" --arg content "$content" '{username: $username, avatar_url: $avatar_url, content: $content}')
           curl --fail-with-body -H "Content-Type: application/json" -X POST -d "$payload" "$DISCORD_WEBHOOK_URL"
