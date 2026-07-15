@@ -1,0 +1,7 @@
+{"timestamp": 1.00, "can_id": "0x120", "data_hex": "0000000000000000", "note": "wheel speed 0.00 km/h ghost value"}
+{"timestamp": 1.01, "can_id": "0x121", "data_hex": "a00f000000000000", "note": "engine rpm 1000.00 ghost value"}
+{"timestamp": 1.02, "can_id": "0x122", "data_hex": "0000000000000000", "note": "steering angle centered"}
+{"timestamp": 1.03, "can_id": "0x123", "data_hex": "0100000000000000", "note": "gear ghost value 1"}
+{"timestamp": 1.04, "can_id": "0x124", "data_hex": "0000000000000000", "note": "ignition off ghost value"}
+{"timestamp": 1.05, "can_id": "0x125", "data_hex": "0000000000000000", "note": "driver door closed ghost value"}
+{"timestamp": 1.06, "can_id": "0x126", "data_hex": "0100000000000000", "note": "mock O2 fault present"}

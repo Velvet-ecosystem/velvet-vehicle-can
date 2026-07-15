@@ -16,3 +16,6 @@ hardware = ["python-can>=4.0.0"]
 
 [tool.setuptools.packages.find]
 include = ["velvet_vehicle_can*"]
+
+[project.scripts]
+velvet-ghost-can = "velvet_vehicle_can.ghost_can_demo:main"

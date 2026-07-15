@@ -43,8 +43,12 @@ class SignalMap:
     brake_request: Optional[SignalDef] = None
     throttle_request: Optional[SignalDef] = None
 
-    # Optional extras
+    # Optional read-only observations for public ghost/runtime demos.
+    engine_rpm: Optional[SignalDef] = None
     gear: Optional[SignalDef] = None
+    ignition_state: Optional[SignalDef] = None
+    driver_door: Optional[SignalDef] = None
+    o2_fault: Optional[SignalDef] = None
     cruise_state: Optional[SignalDef] = None
 
 
@@ -108,7 +112,11 @@ class VehicleProfileStore:
             steering_request=_sig(sm.get("steering_request")),
             brake_request=_sig(sm.get("brake_request")),
             throttle_request=_sig(sm.get("throttle_request")),
+            engine_rpm=_sig(sm.get("engine_rpm")),
             gear=_sig(sm.get("gear")),
+            ignition_state=_sig(sm.get("ignition_state")),
+            driver_door=_sig(sm.get("driver_door")),
+            o2_fault=_sig(sm.get("o2_fault")),
             cruise_state=_sig(sm.get("cruise_state")),
         )
         vp = VehicleProfile(
