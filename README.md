@@ -26,6 +26,7 @@ This repository contains the CAN bus interface layer used by Velvet AI to commun
 - **Dialect Learning**: Discover signal mappings through driver action correlation
 - **Profile Storage**: Offline-first vehicle profiles (JSON)
 - **Safety Qualification**: Stage-based capability gating with authority envelopes
+- **Observation Events**: Stable read-only envelopes for runtime, receipts, UI, and organ consumers
 - **Read-Only by Design**: No CAN injection or actuation logic
 
 ## Components
@@ -36,6 +37,7 @@ This repository contains the CAN bus interface layer used by Velvet AI to commun
 - `vehicle_profile.py` - Persistent vehicle profile storage
 - `qualification_gate.py` - Safety-gated capability staging
 - `can_sniffer_service.py` - Main orchestrator service
+- `can_events.py` - Observation-only event envelopes
 - `sniffer_runner.py` - Example standalone runner
 
 ## Installation
@@ -98,6 +100,27 @@ service = CanSnifferService(read_frame=reader.read_frame)
 service.tick()  # Process one frame
 ```
 
+### Create observation events
+
+```python
+from velvet_vehicle_can import (
+    build_can_observation_events,
+    decode_signal_map,
+)
+
+decoded = decode_signal_map(observed_frames, vehicle_profile.signal_map)
+events = build_can_observation_events(
+    decoded,
+    bus_name="obd_can",
+    profile_digest=vehicle_profile.fingerprint_digest,
+)
+
+for event in events:
+    runtime.publish(event.to_dict())
+```
+
+These events report observations only. They carry `authority: none` and cannot be used as direct vehicle-control commands.
+
 ### With hardware
 
 Use the receive-only hardware interfaces after the kernel listen-only check has passed:
@@ -131,6 +154,7 @@ It only:
 
 - Reads CAN frames
 - Learns signal mappings
+- Produces observation-only events
 - Provides qualification decisions
 
 Kernel listen-only mode is required for live vehicle observation. Application-level receive-only classes are an additional boundary, not a replacement for the kernel setting.
@@ -150,6 +174,7 @@ See `docs/can_learning_pipeline.md` for safety methodology.
 
 - [CAN Learning Pipeline](docs/can_learning_pipeline.md) - Stage-based onboarding
 - [Vehicle Dialects](docs/vehicle_dialects.md) - Philosophy and design
+- [CAN Observation Event Contract](docs/can_observation_event_contract.md) - Runtime-facing read-only envelope
 
 The full Founder-node SocketCAN deployment procedure lives in the `velvet-runtime` repository under `docs/founder_can_listen_only_deployment.md`.
 

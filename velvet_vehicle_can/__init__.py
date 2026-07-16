@@ -22,6 +22,13 @@ from .signal_decoder import (
     decode_signal_map,
     summarize_decoded_signals,
 )
+from .can_events import (
+    CAN_OBSERVATION_EVENT,
+    CAN_OBSERVATION_SCHEMA,
+    CanObservationEvent,
+    build_can_observation_events,
+    summarize_can_observation_events,
+)
 
 __all__ = [
     "CanFingerprint",
@@ -59,4 +66,9 @@ __all__ = [
     "decode_signal",
     "decode_signal_map",
     "summarize_decoded_signals",
+    "CAN_OBSERVATION_EVENT",
+    "CAN_OBSERVATION_SCHEMA",
+    "CanObservationEvent",
+    "build_can_observation_events",
+    "summarize_can_observation_events",
 ]
