@@ -32,6 +32,16 @@ from .signal_registry import (
     get_signal_by_profile_field,
     validate_catalog,
 )
+from .capability_registry import (
+    VEHICLE_CAPABILITY_CATALOG,
+    CapabilityDefinition,
+    CapabilityState,
+    VehicleCapability,
+    can_transition_capability,
+    get_capability_definition,
+    transition_capability,
+    validate_capability_catalog,
+)
 from .can_events import (
     CAN_OBSERVATION_EVENT,
     CAN_OBSERVATION_SCHEMA,
@@ -84,6 +94,14 @@ __all__ = [
     "get_signal_by_name",
     "get_signal_by_profile_field",
     "validate_catalog",
+    "VEHICLE_CAPABILITY_CATALOG",
+    "CapabilityDefinition",
+    "CapabilityState",
+    "VehicleCapability",
+    "can_transition_capability",
+    "get_capability_definition",
+    "transition_capability",
+    "validate_capability_catalog",
     "CAN_OBSERVATION_EVENT",
     "CAN_OBSERVATION_SCHEMA",
     "CanObservationEvent",
