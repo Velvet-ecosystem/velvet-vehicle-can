@@ -42,6 +42,12 @@ from .capability_registry import (
     transition_capability,
     validate_capability_catalog,
 )
+from .capability_tokens import (
+    CapabilityToken,
+    TokenValidationContext,
+    TokenValidationResult,
+    validate_capability_token,
+)
 from .can_events import (
     CAN_OBSERVATION_EVENT,
     CAN_OBSERVATION_SCHEMA,
@@ -102,6 +108,10 @@ __all__ = [
     "get_capability_definition",
     "transition_capability",
     "validate_capability_catalog",
+    "CapabilityToken",
+    "TokenValidationContext",
+    "TokenValidationResult",
+    "validate_capability_token",
     "CAN_OBSERVATION_EVENT",
     "CAN_OBSERVATION_SCHEMA",
     "CanObservationEvent",
