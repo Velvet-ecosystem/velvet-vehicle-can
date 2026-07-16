@@ -22,6 +22,16 @@ from .signal_decoder import (
     decode_signal_map,
     summarize_decoded_signals,
 )
+from .signal_registry import (
+    CANONICAL_SIGNAL_CATALOG,
+    SignalCatalogEntry,
+    SignalLifecycle,
+    can_transition_signal,
+    canonical_name_for,
+    get_signal_by_name,
+    get_signal_by_profile_field,
+    validate_catalog,
+)
 from .can_events import (
     CAN_OBSERVATION_EVENT,
     CAN_OBSERVATION_SCHEMA,
@@ -66,6 +76,14 @@ __all__ = [
     "decode_signal",
     "decode_signal_map",
     "summarize_decoded_signals",
+    "CANONICAL_SIGNAL_CATALOG",
+    "SignalCatalogEntry",
+    "SignalLifecycle",
+    "can_transition_signal",
+    "canonical_name_for",
+    "get_signal_by_name",
+    "get_signal_by_profile_field",
+    "validate_catalog",
     "CAN_OBSERVATION_EVENT",
     "CAN_OBSERVATION_SCHEMA",
     "CanObservationEvent",
