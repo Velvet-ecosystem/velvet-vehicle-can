@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable, Mapping
 
 from .signal_decoder import DecodedSignal
+from .signal_registry import canonical_name_for
 
 
 CAN_OBSERVATION_EVENT = "velvet.vehicle.can.signal.observed"
@@ -22,6 +23,7 @@ class CanObservationEvent:
     """
 
     signal: str
+    profile_field: str
     value: float
     raw_value: int
     confidence: float
@@ -41,7 +43,8 @@ class CanObservationEvent:
         if not bus_name or not bus_name.strip():
             raise ValueError("bus_name must be a non-empty string")
         return cls(
-            signal=signal.name,
+            signal=canonical_name_for(signal.name),
+            profile_field=signal.name,
             value=signal.value,
             raw_value=signal.raw_value,
             confidence=signal.confidence,
@@ -61,6 +64,7 @@ class CanObservationEvent:
             "observed_at": self.observed_at,
             "bus": self.bus_name,
             "signal": self.signal,
+            "profile_field": self.profile_field,
             "value": self.value,
             "raw_value": self.raw_value,
             "confidence": self.confidence,
@@ -81,7 +85,7 @@ def build_can_observation_events(
     profile_digest: str | None = None,
     max_events: int = 32,
 ) -> list[CanObservationEvent]:
-    """Convert decoded signals into a bounded list of transport envelopes."""
+    """Convert registered decoded signals into bounded transport envelopes."""
 
     if isinstance(max_events, bool) or not isinstance(max_events, int):
         raise TypeError("max_events must be an integer")
