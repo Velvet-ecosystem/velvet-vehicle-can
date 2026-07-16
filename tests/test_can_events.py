@@ -36,7 +36,8 @@ class TestCanObservationEvents(unittest.TestCase):
         self.assertEqual(payload["source"], "velvet-vehicle-can")
         self.assertEqual(payload["bus"], "powertrain_can")
         self.assertEqual(payload["profile_digest"], "abc123")
-        self.assertEqual(payload["signal"], "wheel_speed")
+        self.assertEqual(payload["signal"], "vehicle.speed")
+        self.assertEqual(payload["profile_field"], "wheel_speed")
         self.assertEqual(payload["can_id_hex"], "0x200")
         self.assertEqual(payload["authority"], "none")
         self.assertFalse(payload["actuation_granted"])
@@ -45,6 +46,11 @@ class TestCanObservationEvents(unittest.TestCase):
     def test_blank_bus_name_fails_closed(self):
         with self.assertRaises(ValueError):
             CanObservationEvent.from_decoded_signal(self.signal, bus_name="   ")
+
+    def test_unregistered_signal_fails_closed(self):
+        unknown = DecodedSignal("mystery", 1.0, 1, 0.5, 0x100, 1.0)
+        with self.assertRaises(KeyError):
+            CanObservationEvent.from_decoded_signal(unknown)
 
     def test_builder_is_bounded(self):
         signals = [self.signal, self.signal, self.signal]
