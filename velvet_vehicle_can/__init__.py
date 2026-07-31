@@ -16,6 +16,7 @@ from .can_sniffer_service import CanSnifferService, SnifferConfig, VehicleRuntim
 from .can_backend import CanReader, SocketCanConfig, PythonCanReader, FakeCanReader
 from .can_observer import ObservedCanFrame, ReceiveOnlyCanObserver, normalize_observed_frame
 from .listen_only_backend import ListenOnlyCanConfig, ListenOnlyPythonCanReader
+from .body_adapter import CanBodyAdapterConfig, CanBodyCycle, ReceiveOnlyCanBodyAdapter
 from .signal_decoder import (
     DecodedSignal,
     decode_signal,
@@ -88,6 +89,9 @@ __all__ = [
     "normalize_observed_frame",
     "ListenOnlyCanConfig",
     "ListenOnlyPythonCanReader",
+    "CanBodyAdapterConfig",
+    "CanBodyCycle",
+    "ReceiveOnlyCanBodyAdapter",
     "DecodedSignal",
     "decode_signal",
     "decode_signal_map",
