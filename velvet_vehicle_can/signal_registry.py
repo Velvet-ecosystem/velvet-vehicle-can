@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-only
-"""Canonical names and lifecycle rules for vehicle CAN observations."""
+"""Canonical names and lifecycle rules for vehicle observations."""
 
 from __future__ import annotations
 
@@ -43,17 +43,81 @@ class SignalCatalogEntry:
 
 
 CANONICAL_SIGNAL_CATALOG: tuple[SignalCatalogEntry, ...] = (
-    SignalCatalogEntry("vehicle.speed", "wheel_speed", "Vehicle road speed observation", "km/h", safety_relevant=True),
-    SignalCatalogEntry("vehicle.engine.rpm", "engine_rpm", "Engine rotational speed observation", "rpm"),
-    SignalCatalogEntry("vehicle.steering.angle", "steering_angle", "Measured steering angle observation", "degree", safety_relevant=True),
-    SignalCatalogEntry("vehicle.steering.request", "steering_request", "Observed steering request signal", safety_relevant=True),
-    SignalCatalogEntry("vehicle.brake.request", "brake_request", "Observed brake request signal", safety_relevant=True),
-    SignalCatalogEntry("vehicle.throttle.request", "throttle_request", "Observed throttle request signal", safety_relevant=True),
-    SignalCatalogEntry("vehicle.gear.current", "gear", "Current gear or selector-state observation"),
-    SignalCatalogEntry("vehicle.ignition.state", "ignition_state", "Ignition or run-state observation"),
-    SignalCatalogEntry("vehicle.door.driver.state", "driver_door", "Driver-door state observation"),
-    SignalCatalogEntry("vehicle.diagnostics.o2_fault", "o2_fault", "Observed oxygen-sensor fault state"),
-    SignalCatalogEntry("vehicle.cruise.state", "cruise_state", "Cruise-control state observation", safety_relevant=True),
+    SignalCatalogEntry(
+        "vehicle.speed",
+        "wheel_speed",
+        "Vehicle road speed observation",
+        "km/h",
+        safety_relevant=True,
+    ),
+    SignalCatalogEntry(
+        "vehicle.engine.rpm",
+        "engine_rpm",
+        "Engine rotational speed observation",
+        "rpm",
+    ),
+    SignalCatalogEntry(
+        "vehicle.engine.running",
+        "engine_running",
+        "Explicit engine-running state observation",
+    ),
+    SignalCatalogEntry(
+        "vehicle.power.voltage",
+        "supply_voltage",
+        "Vehicle electrical supply voltage observation",
+        "V",
+    ),
+    SignalCatalogEntry(
+        "vehicle.steering.angle",
+        "steering_angle",
+        "Measured steering angle observation",
+        "degree",
+        safety_relevant=True,
+    ),
+    SignalCatalogEntry(
+        "vehicle.steering.request",
+        "steering_request",
+        "Observed steering request signal",
+        safety_relevant=True,
+    ),
+    SignalCatalogEntry(
+        "vehicle.brake.request",
+        "brake_request",
+        "Observed brake request signal",
+        safety_relevant=True,
+    ),
+    SignalCatalogEntry(
+        "vehicle.throttle.request",
+        "throttle_request",
+        "Observed throttle request signal",
+        safety_relevant=True,
+    ),
+    SignalCatalogEntry(
+        "vehicle.gear.current",
+        "gear",
+        "Current gear or selector-state observation",
+    ),
+    SignalCatalogEntry(
+        "vehicle.ignition.state",
+        "ignition_state",
+        "Ignition or run-state observation",
+    ),
+    SignalCatalogEntry(
+        "vehicle.door.driver.state",
+        "driver_door",
+        "Driver-door state observation",
+    ),
+    SignalCatalogEntry(
+        "vehicle.diagnostics.o2_fault",
+        "o2_fault",
+        "Observed oxygen-sensor fault state",
+    ),
+    SignalCatalogEntry(
+        "vehicle.cruise.state",
+        "cruise_state",
+        "Cruise-control state observation",
+        safety_relevant=True,
+    ),
 )
 
 _BY_CANONICAL_NAME = {entry.canonical_name: entry for entry in CANONICAL_SIGNAL_CATALOG}
@@ -71,7 +135,7 @@ def get_signal_by_profile_field(profile_field: str) -> SignalCatalogEntry | None
 def canonical_name_for(profile_field: str) -> str:
     entry = get_signal_by_profile_field(profile_field)
     if entry is None:
-        raise KeyError(f"unregistered CAN profile field: {profile_field}")
+        raise KeyError("unregistered vehicle profile field: %s" % profile_field)
     return entry.canonical_name
 
 
@@ -90,17 +154,19 @@ def can_transition_signal(
     return target_index == current_index or target_index == current_index + 1
 
 
-def validate_catalog(entries: Iterable[SignalCatalogEntry] = CANONICAL_SIGNAL_CATALOG) -> None:
+def validate_catalog(
+    entries: Iterable[SignalCatalogEntry] = CANONICAL_SIGNAL_CATALOG,
+) -> None:
     canonical_names: set[str] = set()
     profile_fields: set[str] = set()
 
     for entry in entries:
         if not entry.canonical_name.startswith("vehicle."):
-            raise ValueError("canonical CAN signal names must start with 'vehicle.'")
+            raise ValueError("canonical vehicle signal names must start with 'vehicle.'")
         if entry.canonical_name in canonical_names:
-            raise ValueError(f"duplicate canonical signal name: {entry.canonical_name}")
+            raise ValueError("duplicate canonical signal name: %s" % entry.canonical_name)
         if entry.profile_field in profile_fields:
-            raise ValueError(f"duplicate profile field: {entry.profile_field}")
+            raise ValueError("duplicate profile field: %s" % entry.profile_field)
         if not entry.profile_field or "." in entry.profile_field:
             raise ValueError("profile_field must be a non-empty Python-style field name")
         canonical_names.add(entry.canonical_name)

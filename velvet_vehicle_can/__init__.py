@@ -33,6 +33,24 @@ from .signal_registry import (
     get_signal_by_profile_field,
     validate_catalog,
 )
+from .evidence_topology import (
+    EvidenceSourceKind,
+    EvidenceSourceState,
+    SignalSourceBinding,
+    VehicleEvidenceTopology,
+    VehicleGeneration,
+)
+from .profile_observation import (
+    ProfileObservation,
+    decode_profile_observations,
+    summarize_profile_observations,
+)
+from .socketcan_link import (
+    SocketCanLinkError,
+    SocketCanLinkEvidence,
+    build_live_can_preflight_receipt,
+    inspect_socketcan_link,
+)
 from .capability_registry import (
     VEHICLE_CAPABILITY_CATALOG,
     CapabilityDefinition,
@@ -104,6 +122,18 @@ __all__ = [
     "get_signal_by_name",
     "get_signal_by_profile_field",
     "validate_catalog",
+    "EvidenceSourceKind",
+    "EvidenceSourceState",
+    "SignalSourceBinding",
+    "VehicleEvidenceTopology",
+    "VehicleGeneration",
+    "ProfileObservation",
+    "decode_profile_observations",
+    "summarize_profile_observations",
+    "SocketCanLinkError",
+    "SocketCanLinkEvidence",
+    "build_live_can_preflight_receipt",
+    "inspect_socketcan_link",
     "VEHICLE_CAPABILITY_CATALOG",
     "CapabilityDefinition",
     "CapabilityState",
