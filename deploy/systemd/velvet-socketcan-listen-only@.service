@@ -1,0 +1,35 @@
+[Unit]
+Description=Velvet SocketCAN Listen-Only Setup (%i)
+After=network-pre.target
+Before=velvet-can-body-state-bridge.service
+ConditionPathExists=/sys/class/net/%i
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+EnvironmentFile=/etc/velvet/can/%i.env
+ExecStartPre=/usr/bin/install -d -m 0700 /run/velvet/can
+ExecStart=/usr/bin/bash /opt/velvet/velvet-vehicle-can/scripts/configure_socketcan_listen_only.sh %i ${VELVET_CAN_BITRATE}
+ExecStartPost=/usr/bin/python3 -m velvet_vehicle_can.founder_can_preflight --channel %i --output /run/velvet/can/%i-preflight.json
+ExecStop=/usr/sbin/ip link set dev %i down
+RemainAfterExit=true
+CapabilityBoundingSet=CAP_NET_ADMIN
+AmbientCapabilities=CAP_NET_ADMIN
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictAddressFamilies=AF_NETLINK AF_UNIX
+ReadWritePaths=/run/velvet/can
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
