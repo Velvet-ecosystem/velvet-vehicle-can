@@ -1,0 +1,9 @@
+schema_version: 1
+repository: Velvet-ecosystem/velvet-vehicle-can
+relationship: canonical_public_component
+canonical_ecosystem_map: https://github.com/Velvet-ecosystem/velvet-docs/blob/main/ecosystem.yaml
+canonical_ecosystem_docs: https://github.com/Velvet-ecosystem/velvet-docs/blob/main/docs/machine_readable_ecosystem.md
+note: >-
+  This file is a discovery pointer only. Repository responsibilities, boundaries,
+  invariants, and ecosystem relationships are defined by the canonical map in
+  velvet-docs and must not be inferred from this pointer alone.
