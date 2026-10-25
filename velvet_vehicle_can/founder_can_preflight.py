@@ -23,6 +23,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--channel",
         default=os.environ.get("VELVET_CAN_INTERFACE", "can0"),
     )
+    parser.add_argument("--expected-bitrate", type=int)
     parser.add_argument(
         "--profile",
         type=Path,
@@ -42,7 +43,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         profile = None
         if args.profile is not None:
             profile = VehicleProfileStore(str(args.profile.parent)).load_path(args.profile)
-        link = inspect_socketcan_link(args.channel)
+        link = inspect_socketcan_link(args.channel, expected_bitrate=args.expected_bitrate)
         receipt = build_live_can_preflight_receipt(link, profile=profile)
         rendered = json.dumps(receipt, indent=2, sort_keys=True) + "\n"
         if args.output is not None:

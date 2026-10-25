@@ -38,22 +38,8 @@ ip link set dev "$interface" down
 ip link set dev "$interface" type can bitrate "$bitrate" listen-only on
 ip link set dev "$interface" up
 
-details=$(ip -details link show dev "$interface")
-lowered=$(printf '%s\n' "$details" | tr '[:upper:]' '[:lower:]')
-
-if ! grep -Eq 'state[[:space:]]+up|<[^>]*up[^>]*>' <<<"$lowered"; then
-  echo "SocketCAN interface did not reach UP state" >&2
-  exit 1
-fi
-if ! grep -q 'listen-only on' <<<"$lowered"; then
-  echo "kernel listen-only mode was not verified" >&2
-  exit 1
-fi
-if ! grep -Eq "bitrate[[:space:]]+${bitrate}([[:space:]]|$)" <<<"$lowered"; then
-  echo "configured bitrate does not match kernel evidence" >&2
-  exit 1
-fi
-
+# One canonical verifier owns parsing; no grep of configuration syntax.
+"${VELVET_CAN_PYTHON:-python3}" -m velvet_vehicle_can.founder_can_preflight \
+  --channel "$interface" --expected-bitrate "$bitrate"
 trap - ERR
-printf '%s\n' "$details"
 printf 'Velvet CAN posture: receive-only, bitrate=%s, interface=%s\n' "$bitrate" "$interface"

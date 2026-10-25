@@ -20,10 +20,13 @@ class TestListenOnlyBackend(unittest.TestCase):
         can_module.BusState.PASSIVE = "passive"
         can_module.Bus.return_value = bus
 
-        with patch.dict(sys.modules, {"can": can_module}):
+        with patch.dict(sys.modules, {"can": can_module}), patch(
+            "velvet_vehicle_can.listen_only_backend.inspect_socketcan_link"
+        ) as verify:
             module = importlib.import_module("velvet_vehicle_can.listen_only_backend")
             reader = module.ListenOnlyPythonCanReader(module.ListenOnlyCanConfig())
 
+        self.assertEqual(verify.call_count, 2)
         can_module.Bus.assert_called_once_with(
             channel="can0",
             interface="socketcan",

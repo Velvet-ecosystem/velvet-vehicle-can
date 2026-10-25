@@ -35,41 +35,18 @@ class SocketCanConfig:
 
 
 class PythonCanReader(CanReader):
-    """
-    Read-only CAN reader using python-can.
-    """
+    """Legacy receive API delegated to the verified backend; no public raw bus."""
     def __init__(self, cfg: SocketCanConfig) -> None:
-        try:
-            import can  # type: ignore
-        except Exception as e:
-            raise RuntimeError(
-                "python-can is required for PythonCanReader. "
-                "Install it (pip install python-can) and ensure SocketCAN is configured."
-            ) from e
-
-        self._can = can
-        self.cfg = cfg
-        self.bus = can.interface.Bus(channel=cfg.channel, bustype=cfg.bustype)
-        logger.info(f"[can] PythonCanReader online bustype={cfg.bustype} channel={cfg.channel}")
+        from .listen_only_backend import ListenOnlyCanConfig, ListenOnlyPythonCanReader
+        self._reader = ListenOnlyPythonCanReader(ListenOnlyCanConfig(
+            channel=cfg.channel, bustype=cfg.bustype, receive_timeout_s=cfg.receive_timeout_s,
+        ))
 
     def read_frame(self) -> Optional[CanFrame]:
-        """
-        Non-blocking by default. Returns (ts, can_id, data) or None.
-        """
-        msg = self.bus.recv(timeout=self.cfg.receive_timeout_s)
-        if msg is None:
-            return None
-
-        ts = float(getattr(msg, "timestamp", time.time()))
-        can_id = int(msg.arbitration_id)
-        data = bytes(msg.data) if msg.data is not None else b""
-        return (ts, can_id, data)
+        return self._reader.read_frame()
 
     def shutdown(self) -> None:
-        try:
-            self.bus.shutdown()
-        except Exception:
-            pass
+        self._reader.shutdown()
 
 
 class FakeCanReader(CanReader):
