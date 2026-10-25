@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
 import unittest
+import json
 
 from velvet_vehicle_can.evidence_topology import (
     EvidenceSourceKind,
@@ -19,7 +20,16 @@ from velvet_vehicle_can.vehicle_profile import VehicleProfile
 
 class _Result:
     def __init__(self, stdout="", stderr="", returncode=0):
-        self.stdout = stdout
+        # Existing scenario assertions now use structured iproute2 fixtures.
+        flags = ["NOARP", "UP"] if "state UP" in stdout else ["NOARP"]
+        import re
+        rate = re.search(r"bitrate (\d+)", stdout)
+        self.stdout = json.dumps([{
+            "ifname": "can0", "ifindex": 2, "flags": flags, "operstate": "UP" if "UP" in flags else "DOWN",
+            "linkinfo": {"info_kind": "can", "info_data": {
+                "ctrlmode": ["LISTEN-ONLY"] if "listen-only on" in stdout else [],
+                "state": "ERROR-ACTIVE", "bittiming": {"bitrate": int(rate.group(1)) if rate else None}}}
+        }])
         self.stderr = stderr
         self.returncode = returncode
 

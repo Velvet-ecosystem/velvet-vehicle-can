@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from .can_backend import CanFrame
+from .socketcan_link import inspect_socketcan_link
 
 
 @dataclass(frozen=True)
@@ -19,8 +20,8 @@ class ListenOnlyCanConfig:
     def __post_init__(self) -> None:
         if not self.channel or self.channel != self.channel.strip():
             raise ValueError("channel must be a non-empty normalized string")
-        if not self.bustype or self.bustype != self.bustype.strip():
-            raise ValueError("bustype must be a non-empty normalized string")
+        if self.bustype != "socketcan":
+            raise ValueError("physical reader only supports verified socketcan; use FakeCanReader for simulation")
         if self.receive_timeout_s < 0:
             raise ValueError("receive_timeout_s cannot be negative")
 
@@ -38,6 +39,7 @@ class ListenOnlyPythonCanReader:
     """
 
     def __init__(self, config: ListenOnlyCanConfig) -> None:
+        inspect_socketcan_link(config.channel)
         try:
             import can  # type: ignore
         except Exception as exc:
@@ -53,6 +55,11 @@ class ListenOnlyPythonCanReader:
             kwargs["state"] = passive
 
         self._bus = can.Bus(**kwargs)
+        try:
+            inspect_socketcan_link(config.channel)
+        except Exception:
+            self._bus.shutdown()
+            raise
         self._timeout = config.receive_timeout_s
 
     def read_frame(self) -> Optional[CanFrame]:

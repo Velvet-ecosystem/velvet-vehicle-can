@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import hashlib
+import json
+import math
 import re
 import subprocess
 import time
@@ -12,8 +14,6 @@ from typing import Any, Callable, Mapping, Optional
 
 
 _CHANNEL_PATTERN = re.compile(r"^[A-Za-z0-9_.:-]{1,32}$")
-_BITRATE_PATTERN = re.compile(r"\bbitrate\s+(\d+)\b", re.IGNORECASE)
-_CAN_STATE_PATTERN = re.compile(r"\bcan\s+state\s+([A-Za-z-]+)", re.IGNORECASE)
 Runner = Callable[..., Any]
 
 
@@ -51,57 +51,72 @@ class SocketCanLinkEvidence:
         }
 
 
-def inspect_socketcan_link(
-    channel: str,
-    *,
-    runner: Runner = subprocess.run,
-    now: Optional[float] = None,
-) -> SocketCanLinkEvidence:
-    """Return bounded evidence only when Linux proves UP + listen-only + bitrate."""
+def _unique_object(pairs):
+    value = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError("duplicate kernel evidence field")
+        value[key] = item
+    return value
 
+
+def inspect_socketcan_link(
+    channel: str, *, runner: Optional[Runner] = None,
+    now: Optional[float] = None, expected_bitrate: Optional[int] = None,
+) -> SocketCanLinkEvidence:
+    """Require unambiguous iproute2 JSON evidence; never configure an interface.
+
+    JSON support is required. Malformed/unsupported output never falls back to
+    interpreting configuration syntax as proof. Source configuration is owned by
+    a separately privileged supervisor; reader processes must lack NET_ADMIN.
+    """
     if not isinstance(channel, str) or not _CHANNEL_PATTERN.fullmatch(channel):
         raise SocketCanLinkError("invalid CAN channel")
+    if expected_bitrate is not None and (type(expected_bitrate) is not int or not 10000 <= expected_bitrate <= 1000000):
+        raise SocketCanLinkError("invalid expected bitrate")
     try:
-        result = runner(
-            ["ip", "-details", "link", "show", "dev", channel],
-            text=True,
-            capture_output=True,
-            timeout=3,
-            check=False,
+        response = (runner or subprocess.run)(
+            ["ip", "-json", "-details", "link", "show", "dev", channel],
+            text=True, capture_output=True, timeout=3, check=False,
         )
-    except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as exc:
-        raise SocketCanLinkError("cannot inspect SocketCAN link: %s" % exc)
-
-    output = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
-    lowered = output.lower()
-    if result.returncode != 0:
-        raise SocketCanLinkError("SocketCAN inspection failed: %s" % output)
-    if not output:
-        raise SocketCanLinkError("SocketCAN inspection returned no evidence")
-    if (
-        "state up" not in lowered
-        and ",up," not in lowered
-        and "<up," not in lowered
-    ):
-        raise SocketCanLinkError("SocketCAN link is not UP")
-    if "listen-only on" not in lowered:
-        raise SocketCanLinkError("SocketCAN link is not in kernel listen-only mode")
-
-    bitrate_match = _BITRATE_PATTERN.search(output)
-    if bitrate_match is None:
-        raise SocketCanLinkError("SocketCAN bitrate is absent from link evidence")
-    bitrate = int(bitrate_match.group(1))
-    if not 10000 <= bitrate <= 1000000:
-        raise SocketCanLinkError("SocketCAN bitrate is outside supported bounds")
-
-    state_match = _CAN_STATE_PATTERN.search(output)
-    can_state = state_match.group(1).upper() if state_match else "UNKNOWN"
-    captured_at = time.time() if now is None else _non_negative(now, "now")
+        output = response.stdout or ""
+        if response.returncode != 0 or response.stderr or not 1 <= len(output) <= 65536:
+            raise ValueError("missing or failed structured interface evidence")
+        entries = json.loads(output, object_pairs_hook=_unique_object,
+                             parse_constant=lambda _: (_ for _ in ()).throw(ValueError("invalid number")))
+        if not isinstance(entries, list) or len(entries) != 1:
+            raise ValueError("expected exactly one interface")
+        entry = entries[0]
+        if not isinstance(entry, dict) or entry.get("ifname") != channel:
+            raise ValueError("interface identity mismatch")
+        if type(entry.get("ifindex")) is not int or entry["ifindex"] <= 0:
+            raise ValueError("missing interface index")
+        flags = entry.get("flags")
+        if not isinstance(flags, list) or any(not isinstance(x, str) for x in flags) or "UP" not in flags:
+            raise ValueError("SocketCAN link is not UP")
+        if entry.get("operstate") not in {"UP", "UNKNOWN"}:
+            raise ValueError("SocketCAN operational state is unsafe")
+        info = entry["linkinfo"]
+        if info["info_kind"] != "can":
+            raise ValueError("physical CAN interface required")
+        data = info["info_data"]
+        modes = data.get("ctrlmode")
+        benign = {"LISTEN-ONLY", "TRIPLE-SAMPLING", "BERR-REPORTING", "FD", "FD-NON-ISO", "CC-LEN8-DLC", "ONE-SHOT"}
+        if not isinstance(modes, list) or any(not isinstance(x, str) for x in modes) or "LISTEN-ONLY" not in modes or set(modes) - benign:
+            raise ValueError("kernel listen-only mode is not unambiguously verified")
+        state = data.get("state")
+        if state not in {"ERROR-ACTIVE", "ERROR-WARNING", "ERROR-PASSIVE"}:
+            raise ValueError("CAN controller state is unavailable or unsafe")
+        bitrate = data["bittiming"]["bitrate"]
+        if type(bitrate) is not int or not 10000 <= bitrate <= 1000000:
+            raise ValueError("unsupported or missing bitrate")
+        if expected_bitrate is not None and bitrate != expected_bitrate:
+            raise ValueError("kernel bitrate differs from independently established bitrate")
+    except (OSError, subprocess.TimeoutExpired, ValueError, TypeError, KeyError, AttributeError) as exc:
+        raise SocketCanLinkError("cannot verify passive SocketCAN link: %s" % exc) from exc
     return SocketCanLinkEvidence(
-        channel=channel,
-        bitrate=bitrate,
-        can_state=can_state,
-        captured_at=captured_at,
+        channel=channel, bitrate=bitrate, can_state=state,
+        captured_at=time.time() if now is None else _non_negative(now, "now"),
         details_sha256=hashlib.sha256(output.encode("utf-8")).hexdigest(),
     )
 
@@ -154,6 +169,6 @@ def _non_negative(value: float, label: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise TypeError("%s must be numeric" % label)
     number = float(value)
-    if number < 0:
+    if not math.isfinite(number) or number < 0:
         raise ValueError("%s cannot be negative" % label)
     return number
